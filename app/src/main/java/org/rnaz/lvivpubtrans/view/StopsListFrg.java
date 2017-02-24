@@ -28,16 +28,16 @@ import retrofit2.Response;
  * Created by Roman on 1/25/2017.
  */
 
-public class StopsListFrg extends Fragment{
+public class StopsListFrg extends Fragment {
     private static final String ROUTE_KEY = "ROUTE_KEY";
 
     private RecyclerView mRecyclerView;
     private List<StopModel> stops;
 
-    public static Fragment newInstance(RouteModel route){
+    public static Fragment newInstance(RouteModel route) {
         Fragment fragment = new StopsListFrg();
         Bundle bundle = new Bundle();
-        bundle.putSerializable(ROUTE_KEY,route);
+        bundle.putSerializable(ROUTE_KEY, route);
         fragment.setArguments(bundle);
         return fragment;
     }
@@ -46,19 +46,19 @@ public class StopsListFrg extends Fragment{
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Bundle args = getArguments();
-        if (args != null){
+        if (args != null) {
 
             RouteModel model = (RouteModel) args.getSerializable(ROUTE_KEY);
-            RestAPI.getAPI().getStopsByRouteId(model.getCode()).enqueue(new Callback<String>() {
+            RestAPI.getAPI().getStopsByRouteId(model.getCode()).enqueue(new Callback<List<StopModel>>() {
                 @Override
-                public void onResponse(Call<String> call, Response<String> response) {
-                    Gson gson = new Gson();
-                    StopModel[] models = gson.fromJson(response.body(), StopModel[].class);
-                    ((StopsAdapter)mRecyclerView.getAdapter()).setModels(Arrays.asList(models));
+                public void onResponse(Call<List<StopModel>> call, Response<List<StopModel>> response) {
+                    ((StopsAdapter) mRecyclerView.getAdapter()).setModels(response.body());
                 }
 
                 @Override
-                public void onFailure(Call<String> call, Throwable t) {}
+                public void onFailure(Call<List<StopModel>> call, Throwable t) {
+
+                }
             });
         }
     }
@@ -66,13 +66,13 @@ public class StopsListFrg extends Fragment{
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.stops_list_frg,container,false);
+        return inflater.inflate(R.layout.stops_list_frg, container, false);
     }
 
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         mRecyclerView = (RecyclerView) view.findViewById(R.id.recycler);
         mRecyclerView.setAdapter(new StopsAdapter());
-        mRecyclerView.setLayoutManager(new LinearLayoutManager(getContext(),LinearLayoutManager.VERTICAL,false));
+        mRecyclerView.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false));
     }
 }

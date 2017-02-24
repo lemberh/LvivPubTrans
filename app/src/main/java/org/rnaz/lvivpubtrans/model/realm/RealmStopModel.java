@@ -1,28 +1,31 @@
-package org.rnaz.lvivpubtrans.model;
+package org.rnaz.lvivpubtrans.model.realm;
 
-import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-public class StopModel implements IStopModel{
+import org.rnaz.lvivpubtrans.model.IStopModel;
+
+import io.realm.RealmObject;
+import io.realm.annotations.PrimaryKey;
+
+/**
+ * Created by Roman on 2/15/2017.
+ */
+
+public class RealmStopModel extends RealmObject implements IStopModel {
 
     @SerializedName("X")
-    @Expose
     private Double x;
     @SerializedName("Y")
-    @Expose
     private Double y;
     @SerializedName("Code")
-    @Expose
     private String code;
     @SerializedName("Name")
-    @Expose
     private String name;
     @SerializedName("Id")
-    @Expose
+    @PrimaryKey
     private Integer id;
-    @SerializedName("ComplexEditor")
-    @Expose
-    private Object complexEditor;
+
+    public RealmStopModel(){}
 
     @Override
     public Double getX() {
@@ -73,22 +76,4 @@ public class StopModel implements IStopModel{
     public void setId(Integer id) {
         this.id = id;
     }
-
-    public Object getComplexEditor() {
-        return complexEditor;
-    }
-
-    public void setComplexEditor(Object complexEditor) {
-        this.complexEditor = complexEditor;
-    }
-
-    @Override
-    public String toString() {
-        return "Code: " + code +
-                " Name: " + name +
-                " Id: " + id +
-                " X:" + x + " Y:" + y;
-    }
 }
-
-

@@ -17,24 +17,18 @@ import android.view.ViewGroup;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import org.rnaz.lvivpubtrans.MainActivity;
 import org.rnaz.lvivpubtrans.MapsActivity;
 import org.rnaz.lvivpubtrans.R;
 import org.rnaz.lvivpubtrans.controller.RoutesAdapter;
 import org.rnaz.lvivpubtrans.loaders.RoutesLoader;
+import org.rnaz.lvivpubtrans.model.IRouteModel;
 import org.rnaz.lvivpubtrans.model.MapModel;
 import org.rnaz.lvivpubtrans.model.PathPoint;
-import org.rnaz.lvivpubtrans.model.RouteModel;
 import org.rnaz.lvivpubtrans.model.StopModel;
 import org.rnaz.lvivpubtrans.service.RestAPI;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
-
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 /**
  * Created by Roman on 1/25/2017.
@@ -43,7 +37,7 @@ import retrofit2.Response;
 public class RoutesListFrg extends Fragment {
 
     public interface IOnItemSelected {
-        void onSelected(RouteModel model);
+        void onSelected(IRouteModel model);
     }
 
     private RecyclerView mRecyclerView;
@@ -69,36 +63,9 @@ public class RoutesListFrg extends Fragment {
         mRecyclerView = (RecyclerView) view.findViewById(R.id.recycler);
         mRecyclerView.setAdapter(new RoutesAdapter(new IOnItemSelected() {
             @Override
-            public void onSelected(final RouteModel model) {
+            public void onSelected(final IRouteModel model) {
 //                ((MainActivity)getActivity()).showStopsList(model);
-
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Gson gson = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
-
-                        try {
-                            Response<String> response = RestAPI.getAPI().getStopsByRouteId(model.getCode()).execute();
-                            List<StopModel> modelsS = Arrays.asList(gson.fromJson(response.body(), StopModel[].class));
-
-                            response = RestAPI.getAPI().getRoutePathRaw(model.getCode()).execute();
-                            List<PathPoint> modelsP = Arrays.asList(gson.fromJson(response.body(), PathPoint[].class));
-
-                            final MapModel mapModel = MapModel.newInstance();
-                            mapModel.addItem(new MapModel.Item(model, modelsS, modelsP));
-                            getActivity().runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-
-                                    startActivity(MapsActivity.getIntent(getActivity(), mapModel));
-                                }
-                            });
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-
-                    }
-                }).start();
+                startActivity(MapsActivity.getIntent(getActivity(), model.getCode()));
             }
         }));
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false));
@@ -106,19 +73,19 @@ public class RoutesListFrg extends Fragment {
         getLoaderManager().initLoader(0, null, loaderCallbacks);
     }
 
-    private LoaderManager.LoaderCallbacks<List<RouteModel>> loaderCallbacks = new LoaderManager.LoaderCallbacks<List<RouteModel>>() {
+    private LoaderManager.LoaderCallbacks<List<IRouteModel>> loaderCallbacks = new LoaderManager.LoaderCallbacks<List<IRouteModel>>() {
         @Override
-        public Loader<List<RouteModel>> onCreateLoader(int id, Bundle args) {
+        public Loader<List<IRouteModel>> onCreateLoader(int id, Bundle args) {
             return new RoutesLoader(getContext());
         }
 
         @Override
-        public void onLoadFinished(Loader<List<RouteModel>> loader, List<RouteModel> data) {
+        public void onLoadFinished(Loader<List<IRouteModel>> loader, List<IRouteModel> data) {
             ((RoutesAdapter) mRecyclerView.getAdapter()).setModels(data);
         }
 
         @Override
-        public void onLoaderReset(Loader<List<RouteModel>> loader) {
+        public void onLoaderReset(Loader<List<IRouteModel>> loader) {
             ((RoutesAdapter) mRecyclerView.getAdapter()).setModels(null);
         }
     };
