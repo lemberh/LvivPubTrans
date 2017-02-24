@@ -7,6 +7,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import org.rnaz.lvivpubtrans.R;
+import org.rnaz.lvivpubtrans.model.IRouteModel;
 import org.rnaz.lvivpubtrans.model.RouteModel;
 import org.rnaz.lvivpubtrans.view.RoutesListFrg;
 
@@ -18,7 +19,7 @@ import java.util.List;
 
 public class RoutesAdapter extends RecyclerView.Adapter<RoutesAdapter.RouteVH> {
 
-    private List<RouteModel> models;
+    private List<IRouteModel> models;
     private RoutesListFrg.IOnItemSelected onItemSelected;
 
     public RoutesAdapter(RoutesListFrg.IOnItemSelected onItemSelected) {
@@ -40,7 +41,7 @@ public class RoutesAdapter extends RecyclerView.Adapter<RoutesAdapter.RouteVH> {
         return models == null ? 0 :models.size();
     }
 
-    public void setModels(List<RouteModel> models) {
+    public void setModels(List<IRouteModel> models) {
         this.models = models;
         notifyDataSetChanged();
     }

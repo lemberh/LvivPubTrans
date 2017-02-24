@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "1055367661246",
+    "firebase_url": "https://lviv-public-transport.firebaseio.com",
+    "project_id": "lviv-public-transport",
+    "storage_bucket": "lviv-public-transport.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1055367661246:android:77fa75d9409aaf4a",
+        "android_client_info": {
+          "package_name": "org.rnaz.lvivpubtrans"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1055367661246-6m52o6059a3ksuabh4qel7mbijkf0ehp.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "org.rnaz.lvivpubtrans",
+            "certificate_hash": "beb4afa7368e73f484b1212ad2c114dcf6127cb1"
+          }
+        },
+        {
+          "client_id": "1055367661246-jt4t7s3jh81bn81pf70q447l9m9md2jt.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAxtqy5A5Sc-AeP2_UOrazJ-j6KDY_Oj8U"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1055367661246-jt4t7s3jh81bn81pf70q447l9m9md2jt.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

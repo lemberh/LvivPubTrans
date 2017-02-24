@@ -58,11 +58,15 @@ public class MapModel implements Parcelable{
     }
 
     public static class Item implements Parcelable{
-        RouteModel routeModel;
-        List<StopModel> stops;
-        List<PathPoint> routePath;
+        IRouteModel routeModel;
+        List<IStopModel> stops;
+        List<IPathModel> routePath;
 
-        public Item(RouteModel routeModel, List<StopModel> stops, List<PathPoint> routePath) {
+        public Item(IRouteModel routeModel) {
+
+        }
+
+        public Item(IRouteModel routeModel, List<IStopModel> stops, List<IPathModel> routePath) {
             this.routeModel = routeModel;
             this.stops = stops;
             this.routePath = routePath;
@@ -71,8 +75,8 @@ public class MapModel implements Parcelable{
         Item(Parcel in) {
             Gson gson = new Gson();
             routeModel = gson.fromJson(in.readString(),RouteModel.class);
-            stops = Arrays.asList(gson.fromJson(in.readString(),StopModel[].class));
-            routePath = Arrays.asList(gson.fromJson(in.readString(),PathPoint[].class));
+            stops = Arrays.asList(gson.fromJson(in.readString(),IStopModel[].class));
+            routePath = Arrays.asList(gson.fromJson(in.readString(),IPathModel[].class));
         }
 
         public static final Creator<Item> CREATOR = new Creator<Item>() {
@@ -100,15 +104,15 @@ public class MapModel implements Parcelable{
             parcel.writeString(gson.toJson(routePath.toArray(),PathPoint[].class));
         }
 
-        public RouteModel getRouteModel() {
+        public IRouteModel getRouteModel() {
             return routeModel;
         }
 
-        public List<StopModel> getStops() {
+        public List<IStopModel> getStops() {
             return stops;
         }
 
-        public List<PathPoint> getRoutePath() {
+        public List<IPathModel> getRoutePath() {
             return routePath;
         }
     }

@@ -7,7 +7,10 @@ import com.google.gson.annotations.SerializedName;
 
 import java.io.Serializable;
 
-public class RouteModel implements Serializable{
+import io.realm.RealmObject;
+import io.realm.annotations.Ignore;
+
+public class RouteModel implements Serializable, IRouteModel{
 
     @SerializedName("Code")
     @Expose

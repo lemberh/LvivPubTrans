@@ -7,7 +7,7 @@ import com.google.gson.annotations.SerializedName;
  * Created by Roman on 1/26/2017.
  */
 
-public class PathPoint {
+public class PathPoint implements IPathModel {
 
     @SerializedName("X")
     @Expose

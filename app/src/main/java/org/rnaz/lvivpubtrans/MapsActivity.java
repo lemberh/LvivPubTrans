@@ -1,5 +1,6 @@
 package org.rnaz.lvivpubtrans;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -7,8 +8,8 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -20,37 +21,44 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
-import com.google.gson.Gson;
+import com.google.firebase.crash.FirebaseCrash;
 
+import org.rnaz.lvivpubtrans.model.IPathModel;
+import org.rnaz.lvivpubtrans.model.IStopModel;
 import org.rnaz.lvivpubtrans.model.MapModel;
-import org.rnaz.lvivpubtrans.model.PathPoint;
-import org.rnaz.lvivpubtrans.model.StopModel;
 import org.rnaz.lvivpubtrans.model.VehicleCoordinatesModel;
+import org.rnaz.lvivpubtrans.model.realm.RealmRouteModel;
 import org.rnaz.lvivpubtrans.service.RestAPI;
 import org.rnaz.lvivpubtrans.utils.MapUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+
+import io.realm.Realm;
+import io.realm.RealmChangeListener;
+import io.realm.RealmModel;
 
 import static org.rnaz.lvivpubtrans.utils.MapUtils.convertToGMapCoordinates;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
     private static final String MAP_MODEL_KEY = "MAP_MODEL_KEY";
+    private static final String ROUTE_CODE_KEY = "ROUTE_CODE_KEY";
+    public static final int VEHICLE_MARKER_IC_SIZE = 100;
+    private String routeCode;
 
-    public static Intent getIntent(Context context,MapModel mapModel) {
+    public static Intent getIntent(Context context, String routeCode) {
         Intent intent = new Intent(context, MapsActivity.class);
-        intent.putExtra(MAP_MODEL_KEY,mapModel);
+        intent.putExtra(ROUTE_CODE_KEY, routeCode);
         return intent;
     }
 
     private GoogleMap mMap;
-    private MapModel mapModel;
+    private MapModel mapModel;//TODO change
+    private RealmRouteModel routeModel;
     private MapUtils.MapFrameCalculator mapFrameCalculator;
     private List<Marker> vehicles = new ArrayList<>();
 
@@ -59,15 +67,22 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        FirebaseCrash.log("MapsActivity created");
         setContentView(R.layout.activity_maps);
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
-        if (getIntent().getExtras() != null){
-            mapModel = getIntent().getExtras().getParcelable(MAP_MODEL_KEY);
+        if (savedInstanceState != null) {
+            mapModel = savedInstanceState.getParcelable(MAP_MODEL_KEY);
         }
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        outState.putParcelable(MAP_MODEL_KEY, mapModel);
+        super.onSaveInstanceState(outState);
     }
 
     @Override
@@ -87,114 +102,175 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      */
     @Override
     public void onMapReady(GoogleMap googleMap) {
+        loadVehicleMarkerIc();
         mMap = googleMap;
-        mMap.setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
-            @Override
-            public void onMapLoaded() {
-                mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(mapFrameCalculator.createBounds(),50));
-            }
-        });
-        initFromModel();
+//        mMap.setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
+//            @Override
+//            public void onMapLoaded() {
+//
+//            }
+//        });
+
+        if (mapModel == null) {
+            final ProgressDialog dialog = ProgressDialog.show(this, "Loading ...", null, true, false);
+            routeCode = getIntent().getExtras().getString(ROUTE_CODE_KEY);
+
+            Realm realm = Realm.getDefaultInstance();
+            routeModel = realm.where(RealmRouteModel.class).
+                    equalTo(RealmRouteModel.CODE_FIELD_NAME, routeCode).findFirstAsync();
+            routeModel.addChangeListener(new RealmChangeListener<RealmModel>() {
+                @Override
+                public void onChange(RealmModel element) {
+                    initFromModel(routeModel);
+                    dialog.dismiss();
+                }
+            });
+
+//            new Thread(new Runnable() {
+//                @Override
+//                public void run() {
+//                    Realm realm = Realm.getDefaultInstance();
+//                    final RealmRouteModel routeModel = realm.where(RealmRouteModel.class).
+//                            equalTo(RealmRouteModel.CODE_FIELD_NAME, routeCode).findFirst();
+//
+////                        mapModel = MapModel.newInstance();
+////                        mapModel.addItem(new MapModel.Item(routeModel, routeModel.getStops(), routeModel.getPath()));
+//                    runOnUiThread(new Runnable() {
+//                        @Override
+//                        public void run() {
+//                            initFromModel(routeModel);
+//                            dialog.dismiss();
+//                        }
+//                    });
+////                    realm.close();
+//
+//                }
+//            }).start();
+        } else {
+//            initFromModel();
+        }
     }
 
-    public void initFromModel(){
+    public void initFromModel(RealmRouteModel model) {
         mapFrameCalculator = MapUtils.getMapFrameCalculator();
-        for (MapModel.Item item :
-                mapModel.getItems()) {
-//            if (!item.getStops().isEmpty()){
+        if (!model.getStops().isEmpty()) {
+            addStopsOnMap(model.getStops());
+        }
+        if (!model.getPath().isEmpty()) {
+            addRoutePathOnMap(model.getPath());
+        }
+        mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(mapFrameCalculator.createBounds(), 50));
+        executorService.scheduleAtFixedRate(updateVehiclePosTask, 0, 5, TimeUnit.SECONDS);
+    }
+
+//    public void initFromModel() {
+//        mapFrameCalculator = MapUtils.getMapFrameCalculator();
+//        for (MapModel.Item item :
+//                mapModel.getItems()) {
+//            if (!item.getStops().isEmpty()) {
 //                addStopsOnMap(item.getStops());
 //            }
-            if (!item.getRoutePath().isEmpty()){
-                addRoutePathOnMap(item.getRoutePath());
-            }
-        }
-        executorService.scheduleAtFixedRate(updateVehiclePosTask,0,5, TimeUnit.SECONDS);
-    }
+//            if (!item.getRoutePath().isEmpty()) {
+//                addRoutePathOnMap(item.getRoutePath());
+//            }
+//        }
+//        mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(mapFrameCalculator.createBounds(), 50));
+//        executorService.scheduleAtFixedRate(updateVehiclePosTask, 0, 5, TimeUnit.SECONDS);
+//    }
 
-    private void addRoutePathOnMap(List<PathPoint> routePath) {
+    private void addRoutePathOnMap(List<? extends IPathModel> routePath) {
         PolylineOptions polylineOptions = new PolylineOptions();
         polylineOptions.color(Color.DKGRAY);
         polylineOptions.width(10);
         polylineOptions.addAll(convertToGMapCoordinates(routePath));
         mMap.addPolyline(polylineOptions);
-        for (PathPoint point :
-                routePath) {
-            mapFrameCalculator.addPoint(point.getY(),point.getX());
+        for (IPathModel point : routePath) {
+            mapFrameCalculator.addPoint(point.getY(), point.getX());
         }
     }
 
-    private void addStopsOnMap(List<StopModel> stops) {
-        for (StopModel stopModel :
-                stops) {
-            LatLng latLng = new LatLng(stopModel.getY(),stopModel.getX());
-            mMap.addMarker(new MarkerOptions().position(latLng).title(stopModel.getName()));
+    private void addStopsOnMap(List<? extends IStopModel> stops) {
+        for (IStopModel stopModel : stops) {
+            LatLng latLng = new LatLng(stopModel.getY(), stopModel.getX());
+            mMap.addMarker(new MarkerOptions().position(latLng).title(stopModel.getName())
+                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.bus_stop)));
             mapFrameCalculator.addPoint(latLng);
         }
     }
 
-    private void addVehiclesOnMap (List<VehicleCoordinatesModel> coordinates){
-        if (executorService.isShutdown()){
+    private void addVehiclesOnMap(List<VehicleCoordinatesModel> coordinates) {
+        if (executorService.isShutdown()) {
             return;
         }
         for (Marker marker :
                 vehicles) {
             marker.remove();
-            vehicles.remove(marker);
         }
-        for (VehicleCoordinatesModel vehicle :
-                coordinates) {
-            addVehicleMarker(vehicle);
+        vehicles.clear();
+        for (VehicleCoordinatesModel vehicle : coordinates) {
+            vehicles.add(addVehicleMarker(vehicle));
 //            vehicles.add(mMap.addMarker(new MarkerOptions().position(new LatLng(vehicle.getY(),vehicle.getX()))
 //                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.marker_outline))));
         }
     }
 
-    private void addVehicleMarker (VehicleCoordinatesModel vehicle){
+    private Marker addVehicleMarker(VehicleCoordinatesModel vehicle) {
         Bitmap.Config conf = Bitmap.Config.ARGB_8888;
-        Bitmap bmp = Bitmap.createBitmap(150, 150, conf);
+        Bitmap bmp = Bitmap.createBitmap(VEHICLE_MARKER_IC_SIZE, VEHICLE_MARKER_IC_SIZE, conf);
         Canvas canvas = new Canvas(bmp);
 
 // paint defines the text color, stroke width and size
-        Paint color = new Paint();
-        color.setTextSize(35);
-        color.setColor(Color.BLUE);
+        Paint paint = new Paint();
+        paint.setTextSize(35);
+        paint.setColor(Color.BLUE);
+        paint.setAntiAlias(true);
+        paint.setFilterBitmap(true);
+        paint.setDither(true);
 
 // modify canvas
         canvas.save();
-        canvas.rotate(vehicle.getAngle().floatValue(),canvas.getWidth()/2,canvas.getHeight()/2);
-        canvas.drawBitmap(BitmapFactory.decodeResource(getResources(),
-                R.drawable.marker_outline), 0,0, color);
+        float courseDirection = vehicle.getAngle().floatValue() * -1 - 90;
+        canvas.rotate(courseDirection, canvas.getWidth() / 2, canvas.getHeight() / 2);
+        canvas.drawBitmap(vehicleMarkerIc, 0, 0, paint);
         canvas.restore();
 //        canvas.drawText("User Name!", 30, 40, color);
 
 // add marker to Map
-        mMap.addMarker(new MarkerOptions().position(new LatLng(vehicle.getY(),vehicle.getX()))
+        return mMap.addMarker(new MarkerOptions().position(new LatLng(vehicle.getY(), vehicle.getX()))
                 .icon(BitmapDescriptorFactory.fromBitmap(bmp))
                 // Specifies the anchor to be at a particular point in the marker image.
-                .anchor(0.5f, 1));
+                .anchor(0.5f, 0.5f)
+                .zIndex(2));
+    }
+
+    private Bitmap vehicleMarkerIc;
+
+    private void loadVehicleMarkerIc() {
+        vehicleMarkerIc = BitmapFactory.decodeResource(getResources(), R.drawable.marker_outline);
+        vehicleMarkerIc = Bitmap.createScaledBitmap(vehicleMarkerIc, VEHICLE_MARKER_IC_SIZE, VEHICLE_MARKER_IC_SIZE, true);
     }
 
     private Runnable updateVehiclePosTask = new Runnable() {
 
         @Override
         public void run() {
-            Gson gson = new Gson();
-            final List<VehicleCoordinatesModel> coordinates = new ArrayList<>();
-            for (MapModel.Item item:
-                    mapModel.getItems()) {
-                if (item.getRouteModel() == null){
-                    continue;
-                }
-                try {
-                    String body = RestAPI.getAPI().getRouteMonitoringByCode(item.getRouteModel().getCode()).execute().body();
-                    VehicleCoordinatesModel[] c = gson.fromJson(body, VehicleCoordinatesModel[].class);
-                    Log.i("RouteMonitoringByCode","size " + c.length);
-                    Log.i("RouteMonitoringByCode",Arrays.toString(c));
-                    coordinates.addAll(Arrays.asList(c));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+            final List<VehicleCoordinatesModel> coordinates = new ArrayList<>();//TODO new model
+//            for (MapModel.Item item :
+//                    mapModel.getItems()) {
+//                if (item.getRouteModel() == null) {
+//                    continue;
+//                }
+            try {
+                Log.i("RouteMonitoringByCode", "start loading vehicles coordinates " + routeCode);
+                List<VehicleCoordinatesModel> c = RestAPI.getAPI()
+                        .getRouteMonitoringByCode(routeCode).execute().body();
+                Log.i("RouteMonitoringByCode", "size " + c.size());
+                Log.i("RouteMonitoringByCode", c.toString());
+                coordinates.addAll(c);
+            } catch (IOException e) {
+                e.printStackTrace();
             }
+//            }
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {

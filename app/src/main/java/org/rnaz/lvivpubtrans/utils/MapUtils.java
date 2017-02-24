@@ -3,7 +3,9 @@ package org.rnaz.lvivpubtrans.utils;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 
+import org.rnaz.lvivpubtrans.model.IPathModel;
 import org.rnaz.lvivpubtrans.model.PathPoint;
+import org.rnaz.lvivpubtrans.model.realm.RealmPathModel;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,9 +16,9 @@ import java.util.List;
 
 public class MapUtils {
 
-    public static List<LatLng> convertToGMapCoordinates(List<PathPoint> routePath){
+    public static List<LatLng> convertToGMapCoordinates(List<? extends IPathModel> routePath){
         List<LatLng> res = new ArrayList<>(routePath.size());
-        for (PathPoint point :
+        for (IPathModel point :
                 routePath) {
             res.add(new LatLng(point.getY(), point.getX()));
         }
