@@ -102,29 +102,30 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      */
     @Override
     public void onMapReady(GoogleMap googleMap) {
+        Log.i(MapsActivity.class.getName(), "onMAp Ready");
         loadVehicleMarkerIc();
         mMap = googleMap;
-//        mMap.setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
-//            @Override
-//            public void onMapLoaded() {
-//
-//            }
-//        });
+        mMap.setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
+            @Override
+            public void onMapLoaded() {
+                Log.i(MapsActivity.class.getName(), "onMapLoaded");
+                if (mapModel == null) {
+                    final ProgressDialog dialog = ProgressDialog.show(MapsActivity.this, "Loading ...", null, true, false);
+                    routeCode = getIntent().getExtras().getString(ROUTE_CODE_KEY);
 
-        if (mapModel == null) {
-            final ProgressDialog dialog = ProgressDialog.show(this, "Loading ...", null, true, false);
-            routeCode = getIntent().getExtras().getString(ROUTE_CODE_KEY);
-
-            Realm realm = Realm.getDefaultInstance();
-            routeModel = realm.where(RealmRouteModel.class).
-                    equalTo(RealmRouteModel.CODE_FIELD_NAME, routeCode).findFirstAsync();
-            routeModel.addChangeListener(new RealmChangeListener<RealmModel>() {
-                @Override
-                public void onChange(RealmModel element) {
-                    initFromModel(routeModel);
-                    dialog.dismiss();
+                    Realm realm = Realm.getDefaultInstance();
+                    routeModel = realm.where(RealmRouteModel.class).
+                            equalTo(RealmRouteModel.CODE_FIELD_NAME, routeCode).findFirstAsync();
+                    routeModel.addChangeListener(new RealmChangeListener<RealmModel>() {
+                        @Override
+                        public void onChange(RealmModel element) {
+                            initFromModel(routeModel);
+                            dialog.dismiss();
+                        }
+                    });
                 }
-            });
+            }
+        });
 
 //            new Thread(new Runnable() {
 //                @Override
@@ -146,10 +147,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 //
 //                }
 //            }).start();
-        } else {
-//            initFromModel();
-        }
-    }
+//    } else
+//
+//    {
+////            initFromModel();
+//    }
+
+}
 
     public void initFromModel(RealmRouteModel model) {
         mapFrameCalculator = MapUtils.getMapFrameCalculator();
