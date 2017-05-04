@@ -37,9 +37,9 @@ public class Application extends android.app.Application {
         initHelpers();
 
         commonRepository.setDataUpdateNeeded(true);
-        Realm.getDefaultInstance().beginTransaction();
-        Realm.getDefaultInstance().deleteAll();
-        Realm.getDefaultInstance().commitTransaction();
+//        Realm.getDefaultInstance().beginTransaction();
+//        Realm.getDefaultInstance().deleteAll();
+//        Realm.getDefaultInstance().commitTransaction();
 
     }
 
