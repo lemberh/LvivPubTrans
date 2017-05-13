@@ -2,19 +2,23 @@
 package org.rnaz.lvivpubtrans.model;
 
 
+import android.support.annotation.IntDef;
+
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
 import java.io.Serializable;
-
-import io.realm.RealmObject;
-import io.realm.annotations.Ignore;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
 public class RouteModel implements Serializable, IRouteModel{
 
     @SerializedName("Code")
     @Expose
     private String code;
+    @Expose
+    @TransportType
+    private Integer type;
     @SerializedName("Name")
     @Expose
     private String name;
@@ -33,12 +37,30 @@ public class RouteModel implements Serializable, IRouteModel{
         this.code = code;
     }
 
+    @TransportType
+    public Integer getType() {
+        return type;
+    }
+
+    public void setType(@TransportType Integer type) {
+        this.type = type;
+    }
+
     public String getName() {
         return name;
     }
 
     public void setName(String name) {
         this.name = name;
+        if (name.startsWith("А")){
+            type = BUS;
+        }else if (name.startsWith("Тр")){
+            type = TROLLEYBUS;
+        }else if(name.startsWith("Т")){
+            type = TRAM;
+        }else{
+            type = BUS;
+        }
     }
 
     public Integer getId() {
@@ -47,6 +69,18 @@ public class RouteModel implements Serializable, IRouteModel{
 
     public void setId(Integer id) {
         this.id = id;
+    }
+
+    @Override public Integer getColor() {
+        return null;
+    }
+
+    @Override public void setColor(Integer color) {
+
+    }
+
+    @Override public boolean isFavorite() {
+        return false;
     }
 
     public Object getComplexEditor() {
@@ -63,4 +97,13 @@ public class RouteModel implements Serializable, IRouteModel{
                 " Name: " + name +
                 " Id: " + id;
     }
+
+    @Retention(RetentionPolicy.SOURCE)
+    @IntDef({BUS,TRAM, TROLLEYBUS})
+    public @interface TransportType{}
+
+    public static final int BUS = 0;
+    public static final int TRAM = 1;
+    public static final int TROLLEYBUS = 2;
+
 }
