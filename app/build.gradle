@@ -9,10 +9,10 @@ android {
     buildToolsVersion "25.0.0"
     signingConfigs {
         release {
-            storeFile file("../and-rnaz.jks")
-            storePassword "qweasd"
-            keyAlias "lemberh"
-            keyPassword "qweasd"
+            storeFile rootProject.signing.storeFile
+            storePassword rootProject.signing.storePassword
+            keyAlias rootProject.signing.keyAlias
+            keyPassword rootProject.signing.keyPassword
         }
     }
     defaultConfig {
