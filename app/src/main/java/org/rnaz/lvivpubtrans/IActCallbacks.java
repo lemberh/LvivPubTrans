@@ -1,5 +1,6 @@
 package org.rnaz.lvivpubtrans;
 
+import org.rnaz.lvivpubtrans.model.IRouteModel;
 import org.rnaz.lvivpubtrans.model.RouteModel;
 
 /**
@@ -9,6 +10,6 @@ import org.rnaz.lvivpubtrans.model.RouteModel;
 public interface IActCallbacks {
 
     void showRoutesList ();
-    void showStopsList(RouteModel route);
+    void showStopsList(IRouteModel route);
 
 }

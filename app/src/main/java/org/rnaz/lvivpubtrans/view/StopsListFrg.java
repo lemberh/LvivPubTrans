@@ -13,6 +13,7 @@ import com.google.gson.Gson;
 
 import org.rnaz.lvivpubtrans.R;
 import org.rnaz.lvivpubtrans.controller.StopsAdapter;
+import org.rnaz.lvivpubtrans.model.IRouteModel;
 import org.rnaz.lvivpubtrans.model.RouteModel;
 import org.rnaz.lvivpubtrans.model.StopModel;
 import org.rnaz.lvivpubtrans.service.RestAPI;
@@ -34,10 +35,10 @@ public class StopsListFrg extends Fragment {
     private RecyclerView mRecyclerView;
     private List<StopModel> stops;
 
-    public static Fragment newInstance(RouteModel route) {
+    public static Fragment newInstance(IRouteModel route) {
         Fragment fragment = new StopsListFrg();
         Bundle bundle = new Bundle();
-        bundle.putSerializable(ROUTE_KEY, route);
+        bundle.putString(ROUTE_KEY, route.getCode());
         fragment.setArguments(bundle);
         return fragment;
     }
@@ -48,8 +49,8 @@ public class StopsListFrg extends Fragment {
         Bundle args = getArguments();
         if (args != null) {
 
-            RouteModel model = (RouteModel) args.getSerializable(ROUTE_KEY);
-            RestAPI.getAPI().getStopsByRouteId(model.getCode()).enqueue(new Callback<List<StopModel>>() {
+            String routeCode= args.getString(ROUTE_KEY);
+            RestAPI.getAPI().getStopsByRouteId(routeCode).enqueue(new Callback<List<StopModel>>() {
                 @Override
                 public void onResponse(Call<List<StopModel>> call, Response<List<StopModel>> response) {
                     ((StopsAdapter) mRecyclerView.getAdapter()).setModels(response.body());
