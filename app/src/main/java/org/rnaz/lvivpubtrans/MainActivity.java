@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 
+import org.rnaz.lvivpubtrans.model.IRouteModel;
 import org.rnaz.lvivpubtrans.model.RouteModel;
 import org.rnaz.lvivpubtrans.view.RoutesListFrg;
 import org.rnaz.lvivpubtrans.view.StopsListFrg;
@@ -27,7 +28,7 @@ public class MainActivity extends AppCompatActivity implements IActCallbacks {
     }
 
     @Override
-    public void showStopsList(RouteModel route) {
+    public void showStopsList(IRouteModel route) {
         getSupportFragmentManager().beginTransaction().replace(R.id.content, StopsListFrg.newInstance(route))
                 .addToBackStack(null).commit();
     }

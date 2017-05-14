@@ -16,6 +16,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import org.rnaz.lvivpubtrans.MainActivity;
 import org.rnaz.lvivpubtrans.MapsActivity;
 import org.rnaz.lvivpubtrans.controller.RoutesAdapter;
 import org.rnaz.lvivpubtrans.databinding.RoutesListFrgBinding;
@@ -58,8 +59,8 @@ public class RoutesListFrg extends Fragment {
         binding.recycler.setAdapter(new RoutesAdapter(new IOnItemSelected() {
             @Override
             public void onSelected(final IRouteModel model) {
-//                ((MainActivity)getActivity()).showStopsList(model);
-                startActivity(MapsActivity.getIntent(getActivity(), model.getCode()));
+                ((MainActivity)getActivity()).showStopsList(model);
+//                startActivity(MapsActivity.getIntent(getActivity(), model.getCode()));
             }
         }));
         binding.recycler.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false));
